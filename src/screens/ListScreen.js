@@ -2,11 +2,12 @@ import React, { useEffect, useContext } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-navigation';
 import { Context as ListContext } from '../context/ListContext';
-import { ListItem, Avatar, Badge } from 'react-native-elements';
+import { ListItem, Avatar, Badge, Button, Icon } from 'react-native-elements';
 import { NOT_BOUGHT, LIST_AVATARS, IN_CONSTRUCTION, READY } from '../constants';
+import FacePile from '../components/FacePile';
 
 const ListScreen = ({ navigation }) => {
-  const { state, getLists } = useContext(ListContext);
+  const { state, getLists, selectList } = useContext(ListContext);
   useEffect(() => {
     getLists();
   }, []);
@@ -16,18 +17,18 @@ const ListScreen = ({ navigation }) => {
     return LIST_AVATARS.find((_, index) => index === number);
   };
 
+  const onSelectedList = (id) => {
+    selectList(id);
+    navigation.navigate('Detalle Lista');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       {state.lists.map((list) => (
         <ListItem
           key={list.id}
           bottomDivider
-          onPress={() =>
-            navigation.navigate('Detalle Lista', {
-              list: list,
-              img: randomImage(),
-            })
-          }
+          onPress={() => onSelectedList(list.id)}
         >
           <View>
             <Avatar
@@ -57,23 +58,31 @@ const ListScreen = ({ navigation }) => {
                 .length
             } productos no comprados`}</ListItem.Subtitle>
           </ListItem.Content>
-          {list.users.map((user) => (
-            <Avatar
-              key={user.id}
-              rounded
-              title={user.username
-                .split('')
-                .map((letter, index) => {
-                  if (index < 2) {
-                    return letter.toUpperCase();
-                  }
-                })
-                .join('')}
-              overlayContainerStyle={{ backgroundColor: '#d3d3d3' }}
+          <View style={styles.usersContainer}>
+            <FacePile
+              numFaces={4}
+              faces={list.users.map(() => {
+                return { url: randomImage() };
+              })}
             />
-          ))}
+          </View>
         </ListItem>
       ))}
+      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+        <Button
+          icon={
+            <Icon
+              name="shopping-bag"
+              type="feather"
+              size={25}
+              color="white"
+              containerStyle={{ marginRight: 10 }}
+            />
+          }
+          title="Crea una nueva lista"
+          containerStyle={{ marginTop: 20, width: 300}}
+        />
+      </View>
     </SafeAreaView>
   );
 };
@@ -83,6 +92,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     width: '100%',
     height: '100%',
+  },
+  usersContainer: {
+    paddingRight: 10,
   },
 });
 

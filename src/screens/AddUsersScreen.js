@@ -12,12 +12,13 @@ import {
   Avatar,
   Button,
   Icon,
+  Text,
 } from 'react-native-elements';
 import groceryApi from '../api/grocery';
 
 const AddUsersScreen = ({ route, navigation }) => {
   const { list } = route.params;
-  const { state, modifyList } = useContext(ListContext);
+  const { state, modifyList, cleanError } = useContext(ListContext);
   const [selectedUsers, setSelectedUsers] = useState(list.users);
   const [friends, setFriends] = useState([]);
 
@@ -27,6 +28,16 @@ const AddUsersScreen = ({ route, navigation }) => {
       setFriends(response);
     })();
   }, []);
+
+  useEffect(() => {
+    if (state.error) {
+      setTimeout(() => {
+        cleanError();
+      }, 2000);
+
+      setSelectedUsers(list.users);
+    }
+  }, [state.error]);
 
   const selectUser = (user) => {
     const userSelected = selectedUsers.find(
@@ -49,49 +60,47 @@ const AddUsersScreen = ({ route, navigation }) => {
   };
 
   const modifyUsers = async () => {
-    list.users = selectedUsers;
-    modifyList(list);
-    navigation.goBack();
+    try {
+      const updatedList = Object.assign({}, list, { users: selectedUsers });
+      await modifyList(updatedList);
+      navigation.goBack();
+    } catch (error) {}
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* <SearchBar
-        cancelIcon={null}
-        placeholder="Type Here..."
-        onChangeText={(value) => setSearchTerm(value)}
-        value={searchTerm}
-        inputContainerStyle={{ backgroundColor: '#F0EEEE' }}
-        containerStyle={{
-          backgroundColor: 'white',
-          borderTopColor: 'white',
-          borderBottomColor: 'white',
-        }}
-        onEndEditing={() => console.log('acabo de editar')}
-      /> */}
       <ScrollView>
-        {friends.map((friend) => (
-          <TouchableOpacity key={friend.id} onPress={() => selectUser(friend)}>
-            <ListItem>
-              <Avatar
-                rounded
-                size="medium"
-                source={{
-                  uri:
-                    'https://images.unsplash.com/photo-1568711146297-b8674c3c11b6?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80',
-                }}
-              />
-              <ListItem.Content>
-                <ListItem.Title>{friend.username}</ListItem.Title>
-              </ListItem.Content>
-              <CheckBox
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checked={isChecked(friend)}
-              />
-            </ListItem>
-          </TouchableOpacity>
-        ))}
+        {state.error ? (
+          <Text h4 style={styles.errormsg}>
+            Ha ocurrido un error modificando los usuarios, prueba otra vez
+          </Text>
+        ) : (
+          friends.map((friend) => (
+            <TouchableOpacity
+              key={friend.id}
+              onPress={() => selectUser(friend)}
+            >
+              <ListItem>
+                <Avatar
+                  rounded
+                  size="medium"
+                  source={{
+                    uri:
+                      'https://images.unsplash.com/photo-1568711146297-b8674c3c11b6?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80',
+                  }}
+                />
+                <ListItem.Content>
+                  <ListItem.Title>{friend.username}</ListItem.Title>
+                </ListItem.Content>
+                <CheckBox
+                  checkedIcon="dot-circle-o"
+                  uncheckedIcon="circle-o"
+                  checked={isChecked(friend)}
+                />
+              </ListItem>
+            </TouchableOpacity>
+          ))
+        )}
         {(selectedUsers.length > list.users.length ||
           selectedUsers.length < list.users.length) && (
           <Button
@@ -119,6 +128,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     height: '100%',
     width: '100%',
+  },
+  errormsg: {
+    padding: 20,
+    color: 'red',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

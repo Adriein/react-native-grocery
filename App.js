@@ -53,7 +53,7 @@ function ListFlowScreen({ navigation }) {
               title="AC"
               size="medium"
               overlayContainerStyle={{ backgroundColor: '#d3d3d3' }}
-              onPress={() => navigation.navigate('Cuenta')}
+              onPress={() => navigation.navigate('Perfil')}
             />
           ),
         }}
@@ -61,6 +61,7 @@ function ListFlowScreen({ navigation }) {
       <Stack.Screen name="Detalle Lista" component={DetailListScreen} />
       <Stack.Screen name="Añadir Usuarios" component={AddUsersScreen} />
       <Stack.Screen name="Añadir Productos" component={AddProductsScreen} />
+      <Stack.Screen name="Perfil" component={AccountScreen} />
     </Stack.Navigator>
   );
 }

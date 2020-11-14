@@ -1,4 +1,4 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-navigation';
 import { Context as ListContext } from '../context/ListContext';
@@ -11,14 +11,26 @@ import {
   Icon,
   Divider,
 } from 'react-native-elements';
-import { NOT_BOUGHT, LIST_AVATARS, ACTIVE } from '../constants';
+import { LIST_AVATARS, ACTIVE, READY } from '../constants';
+import FacePile from '../components/FacePile';
 
-const DetailListScreen = ({ route, navigation }) => {
-  const { list, img } = route.params;
+const DetailListScreen = ({ navigation }) => {
+  const { state, modifyList } = useContext(ListContext);
+
+  const randomImage = () => {
+    const number = Math.floor(Math.random() * LIST_AVATARS.length);
+    return LIST_AVATARS.find((_, index) => index === number);
+  };
+
+  const changeListState = async (list) => {
+    const updatedList = Object.assign({}, list, { status: READY });
+    await modifyList(updatedList);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        <Image source={{ uri: img }} style={styles.headerImg} />
+        <Image source={{ uri: randomImage() }} style={styles.headerImg} />
         <Icon
           raised
           name="user-plus"
@@ -26,31 +38,49 @@ const DetailListScreen = ({ route, navigation }) => {
           color="black"
           size={20}
           containerStyle={{ position: 'absolute', top: 5, right: 5 }}
-          onPress={() => navigation.navigate('Añadir Usuarios', { list })}
+          onPress={() =>
+            navigation.navigate('Añadir Usuarios', { list: state.selectedList })
+          }
         />
+        <View style={{ position: 'absolute', top: 10, left: 10 }}>
+          <FacePile
+            numFaces={3}
+            circleSize={25}
+            faces={state.selectedList.users.map(() => {
+              return { url: randomImage() };
+            })}
+          />
+        </View>
       </View>
       <View style={styles.listTitle}>
-        <Text h2>{list.title}</Text>
-        <Icon raised name="edit" type="feather" color="#517fa4" size={20} />
+        <Text h2>{state.selectedList.title}</Text>
+      </View>
+      <View style={styles.buttons}>
         <Icon
           raised
           reverse
+          name="shop"
+          type="entypo"
+          color={state.selectedList.status === READY ? '#F77F00' : '#009900'}
+          containerStyle={{ marginRight: 40 }}
+          size={25}
+          onPress={() => changeListState(state.selectedList)}
+        />
+        <Icon
+          raised
+          reverse
+          disabled={state.selectedList.status === READY ? true : false}
           name="add-shopping-cart"
           type="materialicons"
-          color="#009900"
-          size={20}
-          onPress={() => navigation.navigate('Añadir Productos', { list })}
+          color="#517fa4"
+          size={25}
+          onPress={() => navigation.navigate('Añadir Productos')}
         />
       </View>
 
-      {list.users.map((user) => (
-        <ListItem key={user.id} style={styles.usersList}>
-          <Text>{user.username}</Text>
-        </ListItem>
-      ))}
       <Divider />
       <ScrollView>
-        {list.products.map((product) => (
+        {state.selectedList.products.map((product) => (
           <ListItem key={product.id} bottomDivider>
             <View>
               <Avatar
@@ -89,15 +119,14 @@ const styles = StyleSheet.create({
     height: 200,
   },
   listTitle: {
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'stretch',
+    padding: 10,
   },
   usersList: {
     flexDirection: 'row',
+  },
+  buttons: {
+    flexDirection: 'row',
+    padding: 10,
   },
 });
 
