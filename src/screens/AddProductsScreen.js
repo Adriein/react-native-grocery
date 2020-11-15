@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  FlatList,
 } from 'react-native';
 import {
   CheckBox,
@@ -18,13 +19,58 @@ import groceryApi from '../api/grocery';
 
 const AddProductScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [products, setProducts] = useState([]);
-//   useEffect(() => {
-//     (async () => {
-//       const response = (await groceryApi.get('/api/products')).data;
-//       setProducts(response);
-//     })();
-//   }, []);
+  const [scroll, setScroll] = useState({
+    loading: false,
+    data: [],
+    page: 0,
+    limit: 10,
+  });
+console.log(scroll.page);
+  useEffect(() => {
+    (async () => {
+      const response = (await groceryApi.get(`/api/products?limit=10&page=0`))
+        .data;
+      setScroll((prevState) => {
+        const newState = {
+          loading: false,
+          data: [...response],
+          page: prevState.page + 1,
+          limit: 10,
+        };
+
+        return { ...prevState, ...newState };
+      });
+    })();
+  }, []);
+
+  const loadMoreProducts = async () => {
+    // setScroll((prevState) => {
+    //   const newState = {
+    //     loading: true,
+    //     data: [...prevState.data],
+    //     page: prevState.page,
+    //     limit: 10,
+    //   };
+
+    //   return { ...prevState, ...newState };
+    // });
+
+    const response = (
+      await groceryApi.get(`/api/products?limit=10&page=${scroll.page}`)
+    ).data;
+
+    setScroll((prevState) => {
+      const newState = {
+        loading: false,
+        data: [...response],
+        page: prevState.page + 1,
+        limit: 10,
+      };
+
+      return { ...prevState, ...newState };
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <SearchBar
@@ -40,7 +86,34 @@ const AddProductScreen = () => {
         }}
         onEndEditing={() => console.log('acabo de editar')}
       />
-      <ScrollView>
+      <FlatList
+        data={scroll.data}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity onPress={() => console.log(item)}>
+            <ListItem>
+              <Avatar
+                rounded
+                size="medium"
+                source={{
+                  uri: item.img,
+                }}
+              />
+              <ListItem.Content>
+                <ListItem.Title>{item.name}</ListItem.Title>
+              </ListItem.Content>
+              <CheckBox
+                checkedIcon="dot-circle-o"
+                uncheckedIcon="circle-o"
+                checked={false}
+              />
+            </ListItem>
+          </TouchableOpacity>
+        )}
+        onEndReached={() => loadMoreProducts()}
+        onEndReachedThreshold={0.5}
+      />
+      {/* <ScrollView>
         {products.map((product) => (
           <TouchableOpacity key={product.id} onPress={() => console.log(product)}>
             <ListItem>
@@ -61,8 +134,8 @@ const AddProductScreen = () => {
               />
             </ListItem>
           </TouchableOpacity>
-        ))}
-        {/* {(selectedUsers.length > list.users.length ||
+        ))} */}
+      {/* {(selectedUsers.length > list.users.length ||
           selectedUsers.length < list.users.length) && (
           <Button
             icon={
@@ -79,7 +152,7 @@ const AddProductScreen = () => {
             onPress={modifyUsers}
           />
         )} */}
-      </ScrollView>
+      {/* </ScrollView> */}
     </SafeAreaView>
   );
 };
