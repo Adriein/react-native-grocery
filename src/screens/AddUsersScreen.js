@@ -24,7 +24,7 @@ const AddUsersScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     (async () => {
-      const response = (await groceryApi.get('/api/friend')).data;
+      const response = (await groceryApi.get('/api/followers')).data;
       setFriends(response);
     })();
   }, []);

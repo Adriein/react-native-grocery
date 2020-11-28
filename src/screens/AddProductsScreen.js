@@ -1,23 +1,23 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useContext } from 'react';
 import { Context as ListContext } from '../context/ListContext';
 import {
   TouchableOpacity,
   StyleSheet,
-  ScrollView,
   SafeAreaView,
   FlatList,
+  View,
+  ActivityIndicator,
 } from 'react-native';
 import {
-  CheckBox,
   ListItem,
   Avatar,
-  Button,
-  Icon,
   SearchBar,
 } from 'react-native-elements';
 import groceryApi from '../api/grocery';
 
-const AddProductScreen = () => {
+const AddProductScreen = ({ navigation, route }) => {
+  const { list } = route.params;
+  const { addProduct } = useContext(ListContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [scroll, setScroll] = useState({
     loading: false,
@@ -25,38 +25,61 @@ const AddProductScreen = () => {
     page: 0,
     limit: 10,
   });
-console.log(scroll.page);
-  useEffect(() => {
-    (async () => {
-      const response = (await groceryApi.get(`/api/products?limit=10&page=0`))
-        .data;
+
+  const selectProduct = (product) => {
+    addProduct({ ...product, status: 'not bought', quantity: '1', user: list.users[0].id });
+    navigation.goBack();
+  };
+
+  const loadMoreProducts = async () => {
+    setScroll((prevState) => {
+      const newState = {
+        loading: true,
+        data: [...prevState.data],
+        page: prevState.page,
+        limit: 10,
+      };
+
+      return { ...prevState, ...newState };
+    });
+
+    const response = (
+      await groceryApi.get(
+        `/api/products?limit=10&page=${scroll.page}&search=${searchTerm}`
+      )
+    ).data;
+
+    if (response.length === 0) {
       setScroll((prevState) => {
         const newState = {
           loading: false,
-          data: [...response],
-          page: prevState.page + 1,
+          data: [...prevState.data],
+          page: prevState.page,
           limit: 10,
         };
 
         return { ...prevState, ...newState };
       });
-    })();
-  }, []);
+      return;
+    }
 
-  const loadMoreProducts = async () => {
-    // setScroll((prevState) => {
-    //   const newState = {
-    //     loading: true,
-    //     data: [...prevState.data],
-    //     page: prevState.page,
-    //     limit: 10,
-    //   };
+    setScroll((prevState) => {
+      const newState = {
+        loading: false,
+        data: [...prevState.data, ...response],
+        page: prevState.page + 1,
+        limit: 10,
+      };
 
-    //   return { ...prevState, ...newState };
-    // });
+      return { ...prevState, ...newState };
+    });
+  };
 
+  const searchProduct = async () => {
     const response = (
-      await groceryApi.get(`/api/products?limit=10&page=${scroll.page}`)
+      await groceryApi.get(
+        `/api/products?limit=10&page=${scroll.page}&search=${searchTerm}`
+      )
     ).data;
 
     setScroll((prevState) => {
@@ -69,6 +92,26 @@ console.log(scroll.page);
 
       return { ...prevState, ...newState };
     });
+  };
+
+  const clear = () => {
+    setSearchTerm('');
+    setScroll({
+      loading: false,
+      data: [],
+      page: 0,
+      limit: 10,
+    });
+  };
+
+  const footer = () => {
+    return (
+      scroll.loading && (
+        <View style={styles.loader}>
+          <ActivityIndicator size={'large'} color="#999999" />
+        </View>
+      )
+    );
   };
 
   return (
@@ -84,13 +127,14 @@ console.log(scroll.page);
           borderTopColor: 'white',
           borderBottomColor: 'white',
         }}
-        onEndEditing={() => console.log('acabo de editar')}
+        onEndEditing={searchProduct}
+        onClear={clear}
       />
       <FlatList
         data={scroll.data}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity onPress={() => console.log(item)}>
+          <TouchableOpacity onPress={() => selectProduct(item)}>
             <ListItem>
               <Avatar
                 rounded
@@ -102,57 +146,13 @@ console.log(scroll.page);
               <ListItem.Content>
                 <ListItem.Title>{item.name}</ListItem.Title>
               </ListItem.Content>
-              <CheckBox
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checked={false}
-              />
             </ListItem>
           </TouchableOpacity>
         )}
         onEndReached={() => loadMoreProducts()}
         onEndReachedThreshold={0.5}
+        ListFooterComponent={footer}
       />
-      {/* <ScrollView>
-        {products.map((product) => (
-          <TouchableOpacity key={product.id} onPress={() => console.log(product)}>
-            <ListItem>
-              <Avatar
-                rounded
-                size="medium"
-                source={{
-                  uri:product.img,
-                }}
-              />
-              <ListItem.Content>
-                <ListItem.Title>{product.name}</ListItem.Title>
-              </ListItem.Content>
-              <CheckBox
-                checkedIcon="dot-circle-o"
-                uncheckedIcon="circle-o"
-                checked={false}
-              />
-            </ListItem>
-          </TouchableOpacity>
-        ))} */}
-      {/* {(selectedUsers.length > list.users.length ||
-          selectedUsers.length < list.users.length) && (
-          <Button
-            icon={
-              <Icon
-                name="check-circle"
-                type="feather"
-                size={25}
-                color="white"
-                containerStyle={{ marginRight: 10 }}
-              />
-            }
-            title="Modificar"
-            buttonStyle={{ marginTop: 50, marginRight: 50, marginLeft: 50 }}
-            onPress={modifyUsers}
-          />
-        )} */}
-      {/* </ScrollView> */}
     </SafeAreaView>
   );
 };
@@ -162,6 +162,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     height: '100%',
     width: '100%',
+  },
+  loader: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    padding: 10,
   },
 });
 

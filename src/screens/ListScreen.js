@@ -68,7 +68,22 @@ const ListScreen = ({ navigation }) => {
           </View>
         </ListItem>
       ))}
-      <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+      <Icon
+        raised
+        reverse
+        name="shopping-bag"
+        type="feather"
+        size={25}
+        color="#f50"
+        containerStyle={{
+          position: 'absolute',
+          marginBottom: 20,
+          marginRight: 20,
+          bottom: 0,
+          right: 0
+        }}
+      />
+      {/* <View style={{ justifyContent: 'center', alignItems: 'center' }}>
         <Button
           icon={
             <Icon
@@ -80,9 +95,9 @@ const ListScreen = ({ navigation }) => {
             />
           }
           title="Crea una nueva lista"
-          containerStyle={{ marginTop: 20, width: 300}}
+          containerStyle={{ marginTop: 20, width: 300 }}
         />
-      </View>
+      </View> */}
     </SafeAreaView>
   );
 };

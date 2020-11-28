@@ -11,7 +11,7 @@ import {
   Icon,
   Divider,
 } from 'react-native-elements';
-import { LIST_AVATARS, ACTIVE, READY } from '../constants';
+import { LIST_AVATARS, ACTIVE, READY, IN_CONSTRUCTION } from '../constants';
 import FacePile from '../components/FacePile';
 
 const DetailListScreen = ({ navigation }) => {
@@ -23,7 +23,10 @@ const DetailListScreen = ({ navigation }) => {
   };
 
   const changeListState = async (list) => {
-    const updatedList = Object.assign({}, list, { status: READY });
+    const updatedList = Object.assign({}, list, {
+      status: list.status === READY ? IN_CONSTRUCTION : READY,
+    });
+
     await modifyList(updatedList);
   };
 
@@ -74,7 +77,11 @@ const DetailListScreen = ({ navigation }) => {
           type="materialicons"
           color="#517fa4"
           size={25}
-          onPress={() => navigation.navigate('Añadir Productos')}
+          onPress={() =>
+            navigation.navigate('Añadir Productos', {
+              list: state.selectedList,
+            })
+          }
         />
       </View>
 

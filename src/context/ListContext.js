@@ -10,6 +10,13 @@ const listReducer = (state, action) => {
         ...state,
         selectedList: state.lists.find((list) => list.id === action.payload),
       };
+    case 'add_product':
+      return {
+        ...state,
+        selectedList: Object.assign({}, state.selectedList, {
+          products: [...state.selectedList.products, action.payload],
+        }),
+      };
     case 'add_error':
       return { ...state, error: action.payload };
     case 'clean_error':
@@ -37,10 +44,16 @@ const selectList = (dispatch) => {
   };
 };
 
+const addProduct = (dispatch) => {
+  return async (product) => {
+    dispatch({ type: 'add_product', payload: product });
+  };
+};
+
 const modifyList = (dispatch) => {
   return async (updatedList) => {
     try {
-      await groceryApi.put(`api/list/${updatedList.id}`);
+      await groceryApi.put(`api/list/${updatedList.id}`, updatedList);
       const response = (await groceryApi.get('api/lists')).data;
 
       dispatch({ type: 'get_lists', payload: response });
@@ -59,6 +72,6 @@ const cleanError = (dispatch) => {
 
 export const { Provider, Context } = createDataContext(
   listReducer,
-  { getLists, modifyList, selectList, cleanError },
+  { getLists, modifyList, selectList, cleanError, addProduct },
   { lists: [], error: undefined, selectedList: null }
 );
