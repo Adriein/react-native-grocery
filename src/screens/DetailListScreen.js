@@ -13,6 +13,7 @@ import {
 } from 'react-native-elements';
 import { LIST_AVATARS, ACTIVE, READY, IN_CONSTRUCTION } from '../constants';
 import FacePile from '../components/FacePile';
+import SwipeableRow from '../components/SwipeableRow';
 
 const DetailListScreen = ({ navigation }) => {
   const { state, modifyList } = useContext(ListContext);
@@ -88,27 +89,29 @@ const DetailListScreen = ({ navigation }) => {
       <Divider />
       <ScrollView>
         {state.selectedList.products.map((product) => (
-          <ListItem key={product.id} bottomDivider>
-            <View>
-              <Avatar
-                rounded
-                size="medium"
-                source={{
-                  uri: product.img,
-                }}
-              />
-              <Badge
-                value={product.quantity}
-                status={product.status === ACTIVE ? 'success' : 'error'}
-                containerStyle={{ position: 'absolute', top: -2, right: -1 }}
-              />
-            </View>
+          <SwipeableRow key={product.id}>
+            <ListItem bottomDivider>
+              <View>
+                <Avatar
+                  rounded
+                  size="medium"
+                  source={{
+                    uri: product.img,
+                  }}
+                />
+                <Badge
+                  value={product.quantity}
+                  status={product.status === ACTIVE ? 'success' : 'error'}
+                  containerStyle={{ position: 'absolute', top: -2, right: -1 }}
+                />
+              </View>
 
-            <ListItem.Content>
-              <ListItem.Title>{product.name}</ListItem.Title>
-              <ListItem.Subtitle>{product.supermarket}</ListItem.Subtitle>
-            </ListItem.Content>
-          </ListItem>
+              <ListItem.Content>
+                <ListItem.Title>{product.name}</ListItem.Title>
+                <ListItem.Subtitle>{product.supermarket}</ListItem.Subtitle>
+              </ListItem.Content>
+            </ListItem>
+          </SwipeableRow>
         ))}
       </ScrollView>
     </SafeAreaView>

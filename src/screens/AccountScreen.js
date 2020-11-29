@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Text, Image, TouchableOpacity } from 'react-native';
-import { Icon } from 'react-native-elements';
+import { Icon, Input } from 'react-native-elements';
 import { AsyncStorage } from 'react-native';
+import groceryApi from '../api/grocery';
 
 const AccountScreen = () => {
   useEffect(() => {
@@ -13,6 +14,13 @@ const AccountScreen = () => {
 
   const [username, setUsername] = useState('');
   const [publicId, setPublicId] = useState('');
+  const [follow, setFollow] = useState('');
+
+  const addFollower = async () => {
+    console.log(follow);
+    await groceryApi.post('/api/follow', {publicId: follow});
+  };
+
   return (
     <View style={styles.container}>
       <View>
@@ -35,6 +43,13 @@ const AccountScreen = () => {
         <Text style={styles.text}>{username}</Text>
         <Text style={styles.text}>{publicId}</Text>
       </View>
+      <Input
+        label="Añade el codigo de un amigo"
+        leftIcon={<Icon type="feather" name="user" size={24} color="black" />}
+        containerStyle={{ marginTop: 50 }}
+        onChangeText={setFollow}
+        onEndEditing={addFollower}
+      />
     </View>
   );
 };
